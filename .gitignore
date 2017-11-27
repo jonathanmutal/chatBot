@@ -1,0 +1,5 @@
+*.csv
+.ipynb_checkpoints/*
+whatsapp/*
+facebook/*
+telegram/*
