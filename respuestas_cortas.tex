@@ -1,0 +1,240 @@
+\documentclass{beamer}
+%
+% Choose how your presentation looks.
+%
+% For more themes, color themes and font themes, see:
+% http://deic.uab.es/~iblanes/beamer_gallery/index_by_theme.html
+%
+\mode<presentation>
+{
+  \usetheme{default}      % or try Darmstadt, Madrid, Warsaw, ...
+  \usecolortheme{default} % or try albatross, beaver, crane, ...
+  \usefonttheme{default}  % or try serif, structurebold, ...
+  \setbeamertemplate{navigation symbols}{}
+  \setbeamertemplate{caption}[numbered]
+} 
+
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+
+\title[Respuestas cortas]{Sugerencia de Respuestas Cortas para Conversaciones de Chat}
+\author{Daniela Bosch, Jonathan David Mutal}
+\date{Noviembre 2017}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% Uncomment these lines for an automatically generated outline.
+%\begin{frame}{Outline}
+%  \tableofcontents
+%\end{frame}
+
+\section{Introduction}
+\subsection{Objetivo}
+\begin{frame}{Objetivo}
+	\begin{block}{¿Qué?}
+		\begin{itemize}
+  			\item Predecir \texttt{respuestas cortas} de acuerdo al contexto.
+		\end{itemize}
+	\end{block}
+	\begin{block}{¿Para qué?}
+		\begin{itemize}
+  			\item Facilitar al usuario una respuesta \texttt{inmediata}.
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Etapas a seguir}
+	\begin{itemize}
+		\item Recolección de conversaciones de chats en español.
+        \item Preprocesamiento de los chats
+        \item Separar el contexto de las respuestas cortas para texto de entrenamiento.
+        \item Evaluar con diferentes clasificadores.
+	\end{itemize}
+\end{frame}
+
+
+\section{Problemas}
+\begin{frame}{}
+	\begin{block}{Extracción de corpus}
+    	Problema:
+        \begin{itemize}
+        	\item No hay corpus en la web.
+            \item Muchos chats son privados (privacidad).
+        \end{itemize}
+        \pause
+    	Solución:
+    	\begin{itemize}
+    		\item No sólo recolectar chats privados si no grupos de diferentes IM (whatsapp, telegram, etc..).
+            \item Mezclar con algún corpus parecido (sms, etc..).
+    	\end{itemize}
+        \pause
+        Alrededor de 10 personas nos han brindado sus chats...
+        \begin{table}[htbp]
+    		\begin{center}
+        		\begin{tabular}{|l|l|l|}
+        			\hline
+        			IM & Tamaño & Vocab \\
+        			\hline \hline
+        			Whatsapp & 12MB & 59,630\\ \hline
+        			Facebook & 15MB & non\\ \hline
+        			Telegram & 4MB  & non\\ \hline
+        		\end{tabular}
+        	\caption{Tamaño de los datos de entrenamiento}
+       		\end{center}
+    	\end{table}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Datos de entrenamientos variados}
+    Problemas:
+	\begin{itemize}
+	    \item Mezcla de dominios (conversaciones grupales y personales).
+      	\item Palabras mal escritas.
+        \item Palabras personalizadas.
+        \item Chats con multimedia que forman parte de la conversación (imagenes, audios, videos, gif).
+        \item Emoticones.
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Datos de entrenamiento variados}
+	Posibles soluciones:
+    \begin{itemize}
+      	\item Realizar un pre-procesamiento.
+        \pause
+        \begin{itemize}
+          	 \item Eliminar STOP WORDS.
+             \item Normalizar algunas palabras. Ejemplo: sisi por si. okiis por ok.
+             \item Mapear cada emoticon con una palabra.
+        \end{itemize}
+        \pause
+        \item Ignorar multimedia (por ahora).
+        \item Dividir el texto de entrenamiento en diferentes dominios.
+     \end{itemize}
+\end{frame}
+
+\begin{frame}{Llego el gran problema...}
+	\begin{block}{¿Como usamos estos datos para hacer el bot?}
+    	\pause
+        Usar clasificadores (supervisado):
+    	\begin{itemize}
+            \item Definir una entrada (el contexto).
+        	\item Definir las clases (respuestas cortas).
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+	\begin{block}{Pero.. ¿Qué es una respuesta corta?}
+		\begin{itemize}
+        	\item Definimos una respuesta corta como cualquier mensaje compuesto por N tokens.
+        \end{itemize}
+	\end{block}
+    \pause
+	\begin{block}{Y.. ¿Qué es el contexto de una respuesta corta?}
+    	Tenemos varias alternativas
+    	\begin{itemize}
+    		\item M turnos anteriores, es decir M mensajes anteriores con largo mayor igual a N. 
+            \item Turnos anteriores hasta encontrar una respuesta del mismo usuario.
+            \item Turnos anteriores de acuerdo al tiempo de respuesta. % Explicar un poco
+   		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Ejemplo con 3 turnos anteriores y respuesta corta de 1}
+	\begin{block}{Chat}
+		A: Hola B, como estas? \\
+    	B: Bien y vos? \\
+    	A: Super, hacemos algo hoy? \\
+    	B: Dale \\
+    \end{block}
+    \begin{block}{Conjunto de entrenamiento}
+    	Por lo que un dato de entrenamiento sería: \\
+   		X: hola B, como estas? bien y vos? super, hacemos algo hoy? \\
+    	Y: Dale \\
+    \end{block}
+\end{frame}
+
+\begin{frame}{Caracterizando el contexto}
+	Una vez definido el contexto y las clases. ¿Como caracterizamos el contexto?
+    \pause
+	\begin{block}{}
+        \begin{itemize}
+    		\item Bolsa de palabras:
+            \begin{itemize}
+            	\item Con palabras. Problema con nuevos ejemplos. ¿Que pasa con una palabra nueva? ¿Que pasa si hay errores de ortografía?
+                \pause
+                \item Con N-gramas. Seguimos teniendo el mismo problema
+                \pause
+                \item Con subwords. Un poquito mejor.
+            \end{itemize}
+            \pause
+         	\item Word embeddings de diferentes dominios:
+         	\begin{itemize}
+            	\item SBWCE
+            	\item Corpus del chat
+                \item Con corpus de twitter
+         	\end{itemize}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Clases}
+	\begin{block}{Problema}
+     	Gran cantidad de clases (respuestas cortas). Imposible predecir con tan poco corpus.
+    \end{block}
+    \begin{block}{Solución}
+   		Reducir a 3 clases. ¿Como hacerlo?
+        \begin{itemize}
+			\item Clustering.
+            \item Respuestas más vistas en el corpus.
+            \item A ojo.
+		\end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Clasificadores}
+	\begin{block}{}
+    	Algunos clasificadores a utilizar:
+		\begin{itemize}
+			\item SVM
+            \item Logistic Regression
+            \item Decision Trees
+            \item Naïve Bayes
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Otras soluciones - Trabajo futuro}
+  \begin{itemize}
+    \item Definir previamente las respuestas cortas y etiquetar el corpus.
+    \item Predecir varias respuestas cortas
+    \item Usar un modelo de lenguaje.
+    \item Usar como contexto todos los turnos anteriores pesados por proximidad 
+    \item Hacer modelos neuronales seq2seq.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Colaboración}
+	\begin{block}{}
+		\begin{center}
+       		Nosotros no pedimos monedas... solo sus chats íntimos. \\
+        \end{center}
+        \begin{center}
+        	Agradecemos cualquier colaboración
+        \end{center}
+        \begin{center}
+        	\{jonathanmutal95, danielarbosch\}@gmail.com \\        
+        \end{center}
+    \end{block}
+    \begin{center}	
+		Gracias por su atención!
+    \end{center}
+\end{frame}
+
+
+\end{document}
